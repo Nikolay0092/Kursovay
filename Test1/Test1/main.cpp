@@ -16,7 +16,6 @@ BOOL exceedsDelay(UINT cur, UINT prev, UINT delay);
 #define MILLIS_IN_DAY (HOURS_IN_DAY * MINUTES_IN_HOUR * SECONDS_IN_MINUTE * MILLIS_IN_SECONDS)
 
 VOID ErrorExit(LPCSTR);
-int win_los(int x, int y);
 
 int player_position[3][2]{
         {5, 0},
@@ -101,6 +100,11 @@ public:
 };
 
 int game() {
+    player_position[0][0] = 5; player_position[0][1] = 0;
+    player_position[1][0] = 5; player_position[1][1] = 10;
+    player_position[2][0] = 0; player_position[2][1] = 5;
+    x_coordinate = 11;
+    y_coordinate = 11;
     HANDLE hStdin;
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE); // для смены цветов консоли
     const short bufferSize = 128;
@@ -238,7 +242,7 @@ int game() {
             player_position[0][0] = 11;
             player_position[0][1] = 11;
         }
-        if (player_position[0][0] >= y_coordinate && player_position[1][0] >= y_coordinate && player_position[2][0] >= y_coordinate)
+        if (player_position[0][0] >= y_coordinate - 1 && player_position[1][0] >= y_coordinate - 1 && player_position[2][0] >= y_coordinate - 1)
             return 0;
         else if (y >= y_coordinate)
             return 1;
@@ -253,10 +257,10 @@ int game() {
 }
 
 int main(VOID) {
-    char start;
+    //char start;
     bool i = 0;
     while (!i) {
-        start = '-';
+        char start = '-';
         int G = 10;
         std::cout << "Press 'Y' to start and press 'N' to close: ";
         std::cin >> start;
