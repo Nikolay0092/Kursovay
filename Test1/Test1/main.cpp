@@ -249,7 +249,7 @@ public:
     };
 };
 
-int game(int Number) {
+int game(int Number, int level) {
     player_position[0][0] = 5; player_position[0][1] = 0;
     player_position[1][0] = 5; player_position[1][1] = 10;
     player_position[2][0] = 0; player_position[2][1] = 5;
@@ -301,6 +301,15 @@ int game(int Number) {
     UINT prevTime = time;
     UINT coordTime = time;
     UINT endTime = time + activeDuration; //время в милисекундах от начала года
+    UINT TimeDelay = time;
+
+    int player_delay = 0;
+    if (level == 1)
+        player_delay = 500;
+    else if (level == 2)
+        player_delay = 250;
+    else if (level == 3)
+        player_delay = 50;
 
     while (index < 1000) {//10000000) {
         GetSystemTime(&tempTime);
@@ -350,10 +359,6 @@ int game(int Number) {
             index++;
         }
 
-        if (!exceedsDelay(time, prevTime, delay)) { // делает задержку последующим действиям программы
-            continue;
-        }
-
         if (exceedsDelay(time, coordTime, 10000)) { // делает задержку последующим действиям программы
             y_coordinate--;
             x_coordinate--;
@@ -366,65 +371,75 @@ int game(int Number) {
         cd.X = 0;
         cd.Y = 0;
         SetConsoleCursorPosition(hd, cd); // чистка консоли
-        prevTime = time;
+
         //printf("tick\n");
-        for (int i = 0; i < y_coordinate; i++) { // отображение сетки
-            SetConsoleTextAttribute(handle, FOREGROUND_INTENSITY);
-            printf("|");
-            for (int j = 0; j < x_coordinate; j++) {
-                bool check = false;
-                for (int K = 0; K < Number; K++) {
-                    if (j == player_position[K][1] && i == player_position[K][0]) {
-                        SetConsoleTextAttribute(handle, FOREGROUND_GREEN);
-                        printf(" x ");
-                        check = true;
-                    }
-                }
-                if (j == x && i == y && !check) {
-                    SetConsoleTextAttribute(handle, FOREGROUND_RED);
-                    printf(" x ");
-                }
-                else if (!check) {
-                    printf(" * ");
-                }
+        if (exceedsDelay(time, prevTime, delay)) {
+            for (int i = 0; i < y_coordinate; i++) { // отображение сетки
                 SetConsoleTextAttribute(handle, FOREGROUND_INTENSITY);
                 printf("|");
+                for (int j = 0; j < x_coordinate; j++) {
+                    bool check = false;
+                    for (int K = 0; K < Number; K++) {
+                        if (j == player_position[K][1] && i == player_position[K][0]) {
+                            SetConsoleTextAttribute(handle, FOREGROUND_GREEN);
+                            printf(" x ");
+                            check = true;
+                        }
+                    }
+                    if (j == x && i == y && !check) {
+                        SetConsoleTextAttribute(handle, FOREGROUND_RED);
+                        printf(" x ");
+                    }
+                    else if (!check) {
+                        printf(" * ");
+                    }
+                    SetConsoleTextAttribute(handle, FOREGROUND_INTENSITY);
+                    printf("|");
+                }
+                printf("\n");
             }
-            printf("\n");
+            prevTime = time;
         }
 
         X x_mutex;
-        std::thread t1(&X::fun1, &x_mutex);
-        std::thread t2(&X::fun2, &x_mutex);
-        std::thread t3(&X::fun3, &x_mutex);
-        std::thread t4(&X::fun4, &x_mutex);
-        std::thread t5(&X::fun5, &x_mutex);
-        std::thread t6(&X::fun6, &x_mutex);
-        std::thread t7(&X::fun7, &x_mutex);
-        std::thread t8(&X::fun8, &x_mutex);
-        std::thread t9(&X::fun9, &x_mutex); 
-        std::thread t10(&X::fun10, &x_mutex);
-        t1.join(); t2.join(); t3.join();
-        t4.join(); t5.join(); t6.join();
-        t7.join(); t8.join(); t9.join();
-        t10.join();
 
-        for (int i = 0; i < Number; i++) 
+        if (exceedsDelay(time, TimeDelay, player_delay)) {
+            std::thread t1(&X::fun1, &x_mutex);
+            std::thread t2(&X::fun2, &x_mutex);
+            std::thread t3(&X::fun3, &x_mutex);
+            std::thread t4(&X::fun4, &x_mutex);
+            std::thread t5(&X::fun5, &x_mutex);
+            std::thread t6(&X::fun6, &x_mutex);
+            std::thread t7(&X::fun7, &x_mutex);
+            std::thread t8(&X::fun8, &x_mutex);
+            std::thread t9(&X::fun9, &x_mutex);
+            std::thread t10(&X::fun10, &x_mutex);
+            t1.join(); t2.join(); t3.join();
+            t4.join(); t5.join(); t6.join();
+            t7.join(); t8.join(); t9.join();
+            t10.join();
+            TimeDelay = time;
+        }
+
+        loss = 0;
+        for (int i = 0; i < Number; i++) {
             for (int j = 0; j < Number; j++) {
                 if (player_position[i][0] == player_position[j][0] && player_position[i][1] == player_position[j][1] && i != j) {
                     player_position[i][0] = y_coordinate;
                     player_position[i][1] = x_coordinate;
-                    loss++;
                 }
             }
+            if (player_position[i][0] > y_coordinate - 1)
+                loss++;
+        }
         for (int i = 0; i < Number; i++) {
-            if (loss == Number - 1)
+            if (loss == Number)
                 return 0;
             else if (x == player_position[i][1] && y == player_position[i][0])
                 return 1;
+            else if (y >= y_coordinate)
+                return 1;
         }
-        if (y >= y_coordinate)
-            return 1;
     }
     return 0;
 }
@@ -435,15 +450,20 @@ int main(VOID) {
     while (!i) {
         char start = '-';
         int G = 10;
-        int number = 3;
+        int number = 0;
+        int level = 0;
         std::cout << "Press 'Y' to start and press 'N' to close: ";
         std::cin >> start;
         if (start == 'Y' || start == 'y') {
             std::cout << "Enter the number of players \n (from one to ten): ";
             std::cin >> number;
-            if (number < 1)
+            if (number < 1 || number > 10)
                 continue;
-            G = game(number);
+            std::cout << "Enter the difficulty level \n (1 - easy, 2 - medium, 3 - hard): \n";
+            std::cin >> level;
+            if (level < 1 && level > 3)
+                continue;
+            G = game(number, level);
         }
         else if (start == 'N' || start == 'n')
             return 0;
